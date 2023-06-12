@@ -36,5 +36,7 @@ coefficients(poly([]), []).
 
 coefficients(Poly, Coefficients) :-
     is_polynomial(poly(Poly)).
-    
+
+
+%%% 
     
