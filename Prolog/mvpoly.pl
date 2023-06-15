@@ -32,11 +32,17 @@ is_polynomial(poly(Monomials)) :-
 %%% true whene Coefficients is a list composed of
 %%% the coefficients of polinomial
 
-coefficients(poly([]), []).
+coefficients(poly([]), [0]).
 
-coefficients(Poly, Coefficients) :-
-    is_polynomial(poly(Poly)).
+coefficients(poly([M | Ms]), Coefficients) :-
+    coefficients(poly(Ms), [_ | Coefficients]),
+    coefficients(poly(M), Coefficients).
+    
+coefficients(poly([m(C, _, _)]), C):- !.
 
+
+
+    
 
 %%% 
     
