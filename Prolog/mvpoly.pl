@@ -4,19 +4,21 @@
 
 
 %%% is_monomial/1
-is_monomial(poly(_)) :-
-    false.
+
 is_monomial(m(_C, TD, VPs)) :-
     integer(TD),
     TD >= 0,
-    is_list(VPs)
+    is_list(VPs),
     foreach(member(V, VPs), is_varpower(V)),
     sum_degrees(VPs, TD).
+
+is_monomial(poly(_)) :- false.
 
 %%% sum_degrees/2
 sum_degrees([], 0) :- !.
 sum_degrees([v(Exponent, _Variable) | Vs], TotalDegree) :-
-    sum_degrees(Vs, TotalDegree2), !,
+    sum_degrees(Vs, TotalDegree2),
+    !,
     TotalDegree is Exponent + TotalDegree2.
     
 %%% is_varpower/1
@@ -62,7 +64,7 @@ monomial_start(SingleVariable ^ Expression, m(1, 0, [])) :-
     !,
     integer(Expression),
     !.
-monomial_start(Head * Tail, m(C, TD, m(C, TD, [v(1, Tail) | VPs])) :-
+monomial_start(Head * Tail, m(C, TD, [v(1, Tail) | VPs])) :-
     atom(Tail),
     !,
     monomial_start(Head, m(C, TD1, VPs)),
@@ -91,7 +93,7 @@ reduce_monomial(Monomial, MonomialReduce) :-
     reduce_monomial_execute(Monomial, MonomialReduce).
 
 %%% reduce_monomial_execute/2
-reduce_monomial_execute(m(0, _, _), m(0, 0, []) :-
+reduce_monomial_execute(m(0, _, _), m(0, 0, [])) :-
 			    !.
 reduce_monomial_execute(m(C, 0, []), m(C, 0, [])) :-
     !.
@@ -99,8 +101,8 @@ reduce_monomial_execute(m(C, TD, [v(Exponent, Variable)]),
 			m(C, TD, [v(Exponent, Variable)])) :-
     !.
 reduce_monomial_execute(m(C, TD,
-			 [v(Exponent1, Variable), v(Exponent2, Variable) | VPs],
-			 m(C, TD, VPReduce)) :-
+			 [v(Exponent1, Variable), v(Exponent2, Variable) | VPs]),
+			 m(C, TD, VPsReduced)) :-
 			    !,
 			    X is Exponent1 + Exponent2,
 			    !,
@@ -118,6 +120,7 @@ reduce_monomial_execute(m(C, TD, [v(Exponent1, Var), v(Exponent2, DiffVar) | VPs
 %%% true when Monomials is an list composed of monomails
 is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
+    !,
     foreach(member(M, Monomials), is_monomial(M)).
 is_polynomial(Monomial) :-
     is_monomial(Monomial).
@@ -132,7 +135,7 @@ as_polynomial(Expression, Polynomial) :-
 %%% polynomial_sorted/2
 polynomial_sorted(m(0, _, _), poly([])) :-
     !.
-polynomial_sorted(m(C, TD, VPs2), poly([m(C, TD, VPs])) :-
+polynomial_sorted(m(C, TD, VPs2), poly([m(C, TD, VPs)])) :-
 		      is_monomial(m(C, TD, VPs2)),
 		      !,
 		      sort(2, @=<, VPs2, VPs).
@@ -154,7 +157,7 @@ remove_zero(poly([]), poly([])) :-
 remove_zero(poly([m(0, _, _) | Tail]), poly(Tail2)) :-
     !,
     remove_zero(poly(Tail), poly(Tail2)).
-remove_zero(poly([m(C, TD, VPs) | Tail], poly([m(C, TD, VPs) | Tail2])) :-
+remove_zero(poly([m(C, TD, VPs) | Tail]), poly([m(C, TD, VPs) | Tail2])) :-
 		!,
 		remove_zero(poly(Tail), poly(Tail2)).
 
@@ -208,14 +211,15 @@ is_mono_parse(m(_, _, _)) :-
     !.
 
 %%% red_sort_polynomial/2
-red_sort_polynomail(Monomial, ParsedPolynomial) :-
+red_sort_polynomial(Monomial, ParsedPolynomial) :-
     is_monomial(Monomial),
     is_mono_parse(Monomial),
     !,
     as_polynomial(Monomial, ParsedPolynomial).
 red_sort_polynomial(Polynomial, ParsedPolynomial) :-
     is_polynomial(Polynomial),
-    sort_polynomial(Polynomial, Sort),
+    !,
+    sort_polynomials(Polynomial, Sort),
     sum_monomials(Sort, Sum),
     remove_zero(Sum, ParsedPolynomial).
 red_sort_polynomial(Polynomial, ParsedPolynomial) :-
@@ -226,7 +230,7 @@ red_sort_polynomial(Polynomial, ParsedPolynomial) :-
 get_polynomial_coefficients(poly([]), []) :-
     !.
 get_polynomial_coefficients(poly(Monomials), Coefficients) :-
-    get_polynomial_coefficients(.
+    get_polynomial_coefficients_execute(poly(Monomials), Coefficients).
 
 
 %%% get_polynomial_coefficients_execute/2
@@ -234,14 +238,61 @@ get_polynomial_coefficients_execute(poly([]), []) :-
     !.
 get_polynomial_coefficients_execute(poly([Head | Rest]), [R | RestCoef]) :-
     get_coefficient_mono(Head, R),
-    get_coefficient_polynomial_execute(poly(Rest=, RestCoef).
+    get_polynomial_coefficients_execute(poly(Rest), RestCoef).
     
 
 %%% get_coefficient_mono/2
 get_coefficient_mono(m(C, _, _), C) :-
     !.
     
-    
+
+%%% compare_monomials/3
+compare_monomials(<, m(_C1, TD, VPs1), m(_C2, TD, VPs2)) :-
+    compare_variables(<, VPs1, VPs2),
+    !.
+compare_monomials(>, m(_C1, TD1, _VPs1), m(_C2, TD2, _VPs2)) :-
+    TD1 > TD2, !.
+compare_monomials(>, m(_C1, TD, VPs1), m(_C2, TD, VPs2)) :-
+    compare_variables(>, VPs1, VPs2),
+    !.
+compare_monomials(<, m(_C1, TD1, _VPs1), m(_C2, TD2, _VPs2)) :-
+    TD1 < TD2, !.
+
+
+
+%%% compare_variables/3
+compare_variables(>, [], _) :- !.
+compare_variables(<, _, []) :- !.
+compare_variables(<, v(_, Var1), v(_, Var2)) :-
+    Var1 @< Var2,
+    !.
+compare_variables(>, v(_, Var1), v(_, Var2)) :-
+    Var1 @> Var2,
+    !.
+compare_variables(<, v(Exp1, Var), v(Exp2, Var)) :-
+    Exp1 < Exp2,
+    !.
+compare_variables(>, v(Exp1, Var), v(Exp2, Var)) :-
+    Exp1 > Exp2,
+    !.
+compare_variables(<, [v(Exp, Var) | Vs1] , [v(Exp, Var) | Vs2]) :-
+    !,
+    compare_variables(<, Vs1, Vs2).
+compare_variables(<, [v(Exp1, Var) | _] , [v(Exp2, Var) | _]) :-
+    Exp1 < Exp2,
+    !.
+compare_variables(>, [v(Exp, Var) | Vs1] , [v(Exp, Var) | Vs2]) :-
+    !,
+    compare_variables(>, Vs1, Vs2).
+compare_variables(>, [v(Exp1, Var) | _] , [v(Exp2, Var) | _]) :-
+    Exp1 > Exp2,
+    !.
+compare_variables(<, [v(_, Var1) | _Vs1] , [v(_, Var2) | _Vs2]) :-
+    Var1 @< Var2,
+    !.
+compare_variables(>, [v(_, Var1) | _Vs1] , [v(_, Var2) | _Vs2]) :-
+    Var1 @> Var2,
+    !.
 
 %%% 
     
