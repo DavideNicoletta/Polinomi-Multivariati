@@ -426,18 +426,19 @@ min_degree(Poly, Degree) :-
 poly_plus(Poly1, Poly2, Result) :-
     red_sort_polynomial(Poly1, Parsed1),
     red_sort_polynomial(Poly2, Parsed2),
-    poly_plus_execute(Parsed1, Parsed2, Result).
+    poly_plus_minus_execute(Parsed1, Parsed2, Result).
 
-%%% poly_plus_execute/3
-poly_plus_execute(poly([]), poly([]), poly([])) :-
+%%% poly_plus_minus_execute/3
+poly_plus_minus_execute(poly([]), poly([]), poly([])) :-
     !.
-poly_plus_execute(poly([]), poly(Monomial), poly(SortMonomial)) :-
+poly_plus_minus_execute(poly([]), poly(Monomial), poly(SortMonomial)) :-
     sort_polynomials(poly(Monomial), poly(SortMonomial)),
     !.
-poly_plus_execute(poly(Monomial), poly([]), poly(SortMonomial)) :-
+poly_plus_minus_execute(poly(Monomial), poly([]), poly(SortMonomial)) :-
     sort_polynomials(poly(Monomial), poly(SortMonomial)),
     !.
-poly_plus_execute(poly(FirstMonomial), poly(SecondMonomial), poly(Result)) :-
+poly_plus_minus_execute(poly(FirstMonomial),
+			poly(SecondMonomial), poly(Result)) :-
     append(FirstMonomial, SecondMonomial, X),
     sort_polynomials(poly(X), poly(Y)),
     sum_monomials(poly(Y), poly(W)),
@@ -452,7 +453,22 @@ all_monomial_reduce(poly([Head | Tail]), poly([HeadR | TailR])) :-
     all_monomial_reduce(poly(Tail), poly(TailR)).
 
 
-%%% 
+%%% poly_minus/3
+poly_minus(Poly1, Poly2, Result) :-
+    red_sort_polynomial(Poly1, Parsed1),
+    red_sort_polynomial(Poly2, Parsed2),
+    reverse_polynomial(Parsed2, ReverseParsed2),
+    poly_plus_minus_execute(Parsed1, ReverseParsed2, Result).
+
+
+%%% revers_polynomial/2
+reverse_polynomial(poly([]), poly([])) :-
+    !.
+reverse_polynomial(poly([m(C, TD, VPs) | Mono]),
+		   poly([m(NC, TD, VPs) | Reverse])) :-
+    NC is -C,
+    !,
+    reverse_polynomial(poly(Mono), poly(Reverse)).
 
 %%% 
     
