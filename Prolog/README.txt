@@ -1,0 +1,12 @@
+Metodi implementati:
+is_monomial
+is_polynomia
+is_varpower
+as_monomial
+as_polynomia
+coefficients
+variables
+monomials
+max_degree
+min_degree
+poly_plus

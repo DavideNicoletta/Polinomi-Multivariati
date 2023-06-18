@@ -141,7 +141,7 @@ polynomial_sorted(m(C, TD, VPs2), poly([m(C, TD, VPs)])) :-
 		      sort(2, @=<, VPs2, VPs).
 polynomial_sorted(Expression, poly(Monomials)) :-
     polynomial_start(Expression, poly(Monomial)),
-    sort_polynomial(poly(Monomial), poly(SortedMonomials)),
+    sort_polynomials(poly(Monomial), poly(SortedMonomials)),
     sum_monomials(poly(SortedMonomials), poly(Monomials)).
 
 
@@ -165,7 +165,7 @@ remove_zero(poly([m(C, TD, VPs) | Tail]), poly([m(C, TD, VPs) | Tail2])) :-
 %%% polynomial_start/2
 polynomial_start(Head + Tail, poly(Parsed)) :-
     as_monomial(Tail, ParsedTail),
-    polynomila_start(Head, poly(ParsedHead)),
+    polynomial_start(Head, poly(ParsedHead)),
     !,
     append([ParsedTail], ParsedHead, Parsed).
 polynomial_start(Head - Tail, poly(Parsed)) :-
@@ -293,6 +293,166 @@ compare_variables(<, [v(_, Var1) | _Vs1] , [v(_, Var2) | _Vs2]) :-
 compare_variables(>, [v(_, Var1) | _Vs1] , [v(_, Var2) | _Vs2]) :-
     Var1 @> Var2,
     !.
+
+
+%%% variables/2
+variables(poly([]), []) :-
+    !.
+variables(Poly, Variables) :-
+    red_sort_polynomial(Poly, PolynomialParsed),
+    !,
+    polynomial_variables(PolynomialParsed, VariablesList),
+    get_symbol_var(VariablesList, List),
+    !,
+    sort(List, Variables).
+
+%%% polynomial_variables/2
+polynomial_variables(poly([]), []) :-
+    !.
+polynomial_variables(poly(Monomials), Variables) :-
+    polynomial_variables_execute(poly(Monomials), VariablesT),
+    append(VariablesT, VariablesN),
+    sort(2, @=<, VariablesN, Variables).
+
+
+%%% polynomial_variables_execute/2
+polynomial_variables_execute(poly([]), []) :-
+    !.
+polynomial_variables_execute(poly([Head | Rest]), [R | VariableList]) :-
+    get_monomial_var(Head, R),
+    polynomial_variables_execute(poly(Rest), VariableList).
+
+
+%%% get_monomial_var/2
+get_monomial_var(m(_, _, VPs), VPs) :-
+    !.
+
+
+%%% get_symbol_var/2
+get_symbol_var([], []) :-
+    !.
+get_symbol_var([v(_, SymbolVar) | VPs], [SymbolVar | VPs2]) :-
+    !,
+    get_symbol_var(VPs, VPs2).
+
+
+%%% monomials/2
+monomials(poly([]), []) :-
+    !.
+monomials(Poly, Monomials) :-
+    red_sort_polynomial(Poly, poly(Parsed)),
+    !,
+    sort_polynomials(poly(Parsed), poly(Monomials)).
+
+
+%%% pprint_polynomial/1
+pprint_polynomial(Poly) :-
+    red_sort_polynomial(Poly, PolynomialParsed),
+    !,
+    pprint_execute(PolynomialParsed),
+    nl.
+
+%%% pprint_execute/1
+pprint_execute(poly([])) :-
+    write("Polinomio vuoto").
+pprint_execute(poly([m(C, 0, [])])) :-
+    write(C),
+    !.
+pprint_execute(poly([m(1, _, VPs)])) :-
+    !,
+    print_VarPower(VPs).
+pprint_execute(poly([m(C, _, VPs)])) :-
+    !,
+    write(C),
+    !,
+    write(" * "),
+    !,
+    print_VarPower(VPs).
+pprint_execute(poly([Head | Tail])) :-
+    pprint_execute(poly([Head])),
+    write(" + "),
+    !,
+    pprint_execute(poly(Tail)).
+			
+
+%%% print_VarPower/1
+print_VarPower([]) :-
+    !.
+print_VarPower([v(1, Variable)]) :-
+    !,
+    write(Variable).
+print_VarPower([v(Exponent, Variable)]) :-
+    Exponent \= 1,
+    !,
+    write(Variable),
+    write(^),
+    write(Exponent).
+print_VarPower([v(Exponent, Variable) | VPs]) :-
+    print_VarPower([v(Exponent, Variable)]),
+    write(" * "),
+    print_VarPower(VPs).
+
+
+%%% max_degree/2
+max_degree(poly([]), 0) :-
+    !.
+max_degree(Poly, Degree) :-
+    red_sort_polynomial(Poly, poly(ParsedPolynomial)),
+    !,
+    last_monomial(ParsedPolynomial, m(_, DegreeLastMonomial, _)),
+    !,
+    DegreeLastMonomial >= 0,
+    Degree is DegreeLastMonomial.
+    
+
+
+%%% last_monomial/2
+last_monomial([], m(0, 0, [])) :-
+    !.
+last_monomial([X], X) :-
+    !.
+last_monomial([_ | Xs], Max) :-
+    last_monomial(Xs, Max).
+
+
+%%% min_degree/2
+min_degree(poly([]), 0) :-
+    !.
+min_degree(Poly, Degree) :-
+    red_sort_polynomial(Poly, poly([m(_, Degree, _) | _])),
+    !.
+
+%%% poly_plus/3
+poly_plus(Poly1, Poly2, Result) :-
+    red_sort_polynomial(Poly1, Parsed1),
+    red_sort_polynomial(Poly2, Parsed2),
+    poly_plus_execute(Parsed1, Parsed2, Result).
+
+%%% poly_plus_execute/3
+poly_plus_execute(poly([]), poly([]), poly([])) :-
+    !.
+poly_plus_execute(poly([]), poly(Monomial), poly(SortMonomial)) :-
+    sort_polynomials(poly(Monomial), poly(SortMonomial)),
+    !.
+poly_plus_execute(poly(Monomial), poly([]), poly(SortMonomial)) :-
+    sort_polynomials(poly(Monomial), poly(SortMonomial)),
+    !.
+poly_plus_execute(poly(FirstMonomial), poly(SecondMonomial), poly(Result)) :-
+    append(FirstMonomial, SecondMonomial, X),
+    sort_polynomials(poly(X), poly(Y)),
+    sum_monomials(poly(Y), poly(W)),
+    all_monomial_reduce(poly(W), poly(J)),
+    remove_zero(poly(J), poly(Result)).
+									    
+%%% all_monomial_reduce/2
+all_monomial_reduce(poly([]), poly([])) :-
+    !.
+all_monomial_reduce(poly([Head | Tail]), poly([HeadR | TailR])) :-
+    reduce_monomial(Head, HeadR),
+    all_monomial_reduce(poly(Tail), poly(TailR)).
+
+
+%%% 
 
 %%% 
     
