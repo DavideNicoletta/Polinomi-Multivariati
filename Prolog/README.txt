@@ -11,3 +11,4 @@ max_degree
 min_degree
 poly_plus
 poly_minus
+poly_times

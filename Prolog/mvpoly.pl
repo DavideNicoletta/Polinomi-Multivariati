@@ -470,5 +470,82 @@ reverse_polynomial(poly([m(C, TD, VPs) | Mono]),
     !,
     reverse_polynomial(poly(Mono), poly(Reverse)).
 
+
+%%% poly_times/3
+poly_times(Poly1, Poly2, Result) :-
+    red_sort_polynomial(Poly1, Parsed1),
+    !,
+    red_sort_polynomial(Poly2, Parsed2),
+    !,
+    poly_times_execute(Parsed1, Parsed2, ExecuteResult),
+    sort_polynomials(ExecuteResult, Sort),
+    reduce_all(Sort, ReduceResult),
+    sum_monomials(ReduceResult, Sum),
+    remove_zero(Sum, Result).
+
+
+%%% poly_times_execute/3
+poly_times_execute(poly([]), poly([]), poly([])) :-
+    !.
+poly_times_execute(poly([]), poly(_), poly([])) :-
+    !.
+poly_times_execute(poly(_), poly([]), poly([])) :-
+    !.
+poly_times_execute(poly([Head | Tail]), poly([Head2 | Tail2]),
+		   poly([X | Tail3])) :-
+    mulTimes(Head, Head2, X),
+    poly_times_execute(poly([Head]), poly(Tail2), poly(Tail4)),
+    poly_times_execute(poly(Tail), poly([Head2 | Tail2]), poly(Tail5)),
+    append(Tail4, Tail5, Tail3).
+
+
+
+
+%%%  mulTimes/3
+%%% This predicate multiplies the first Monomial by the second one
+
+mulTimes(m(0, _, _), m(_, _, _), m(0, 0, [])) :- !.
+mulTimes(m(_, _, _), m(0, _, _), m(0, 0, [])) :- !.
+mulTimes(M, [], M) :- !.
+mulTimes([], M, M) :- !.
+mulTimes(m(C1, TD1, VPs1), m(C2, TD2, VPs2), m(C, TD, VPs)) :-
+    C is C1 * C2, !,
+    TD is TD1 + TD2, !,
+    multiply_variables(VPs1, VPs2, VPs).
+		       
+		       
+			  
+%%% multiply_variables/3
+%%% This predicate sums the similar variables in a Monomial
+
+multiply_variables([], [], []) :- !.
+multiply_variables(V, [], V) :- !.
+multiply_variables([], V, V) :- !.
+multiply_variables([v(Exp1, Var) | Vs1], [v(Exp2, Var) | Vs2],
+		               [v(Exp, Var) | Vs]) :-
+    Exp is Exp1 + Exp2,
+    !,
+    multiply_variables(Vs1, Vs2, Vs).
+multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
+		               [v(Exp2, Var2) | Vs]) :-
+    Var1 @>= Var2,
+    !,
+    multiply_variables([v(Exp1, Var1) | Vs1], Vs2, Vs).
+multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
+		               [v(Exp1, Var1) | Vs]) :-
+    Var2 @>= Var1,
+    !,
+    multiply_variables(Vs1, [v(Exp2, Var2) | Vs2], Vs).			    
+			    
+%%% reduce_all/2
+%%% Reduces all the monomials in a poly
+
+reduce_all(poly([]), poly([])) :- !.
+reduce_all(poly([Head | Tail]),
+                 poly([ReduceHead | ReduceTail])) :-
+    reduce_monomial(Head, ReduceHead),
+    reduce_all(poly(Tail), poly(ReduceTail)).
+
+
 %%% 
     
