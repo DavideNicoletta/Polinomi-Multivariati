@@ -1,0 +1,2 @@
+is-zero
+is-monomial
