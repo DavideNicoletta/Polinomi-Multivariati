@@ -3,6 +3,15 @@
 
 
 
+%%% is_zero/1
+is_zero(poly([])) :-
+    !.
+is_zero(m(0, _, _)) :-
+    !.
+is_zero(0) :-
+    !.
+
+
 %%% is_monomial/1
 
 is_monomial(m(_C, TD, VPs)) :-
@@ -14,18 +23,26 @@ is_monomial(m(_C, TD, VPs)) :-
 
 is_monomial(poly(_)) :- false.
 
+
+
+
 %%% sum_degrees/2
 sum_degrees([], 0) :- !.
 sum_degrees([v(Exponent, _Variable) | Vs], TotalDegree) :-
     sum_degrees(Vs, TotalDegree2),
     !,
     TotalDegree is Exponent + TotalDegree2.
-    
+
+
+
 %%% is_varpower/1
 is_varpower(v(Power, VarSymbol)) :-
     integer(Power),
     Power >= 0,
     atom(VarSymbol).
+
+
+
 
 %%% as_monomial/2
 %%% as_monomial(Expression, Monomial)
@@ -154,9 +171,18 @@ sort_polynomials(poly(Monomials), poly(SortedMonomials)) :-
 %%% remove_zero/2
 remove_zero(poly([]), poly([])) :-
     !.
+
 remove_zero(poly([m(0, _, _) | Tail]), poly(Tail2)) :-
     !,
     remove_zero(poly(Tail), poly(Tail2)).
+
+/**
+remove_zero(poly([Head | Tail]), poly(Tail2)) :-
+    !,
+    is_zero(Head),
+    !,
+    remove_zero(poly(Tail), poly(Tail2)).
+*/
 remove_zero(poly([m(C, TD, VPs) | Tail]), poly([m(C, TD, VPs) | Tail2])) :-
 		!,
 		remove_zero(poly(Tail), poly(Tail2)).
@@ -547,5 +573,5 @@ reduce_all(poly([Head | Tail]),
     reduce_all(poly(Tail), poly(ReduceTail)).
 
 
-%%% 
+%%%% end of file -- mvpoly.pl
     
