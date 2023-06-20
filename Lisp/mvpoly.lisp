@@ -11,18 +11,15 @@
       ))
 
 
-
-;;; is-monomial/1
 (defun is-monomial (m)
   (and (listp m)
-       (eq 'M (first m))
+       ( ))
        (let ((mtd (monomial-total-degree m))
-	     (vps (monomial-vars-and-powers m))
-	     )
+             (vps (monomial-vars-and-powers m)))
 	 (and (integerp mtd)
 	      (>= mtd 0)
-	      (listp vps)
-	      (every #'is-varpower vps)))))
+	      (or (listp vps) (not vps)) ; verificare condizione con monomi con varpowe nil
+	      (every #'is-varpower vps))))
 
 
 ;;; monomial-total-degree/1
@@ -67,22 +64,28 @@
 	    ) symbol)
 	  (t nil))))
 
+
+
 ;;; is-polynomial/1
 (defun is-polynomial (p)
   (and (listp p)
        (eq 'poly (first p))
        (let ((ms (monomials p)))
-	 (and (listp ms)
-	      (every #'is-monomial ms)))))
-#|
+         (and (listp ms)
+              (every #'is-monomial ms)))))
+
+
 ;;; monomials/1
 (defun monomials (p)
-(second p))
-|#
+  (second p))
+
+;;; end of file -- mvpoly.lisp
+
 
 ;;; monomials/1
 ;; Returns the list of all the monomials in a poly
 
+#|
 (defun monomials (p)
   (if (equal (first p) 'poly) 
       (first (rest p)) 
@@ -101,6 +104,8 @@
 	     (to-polynomial (as-monomial poly))
 	     (as-polynomial poly)))
         (t (error "Not a valid input! EXPECTED: [Poly] or [Monos]"))))
+|#
 
-;;; end of file -- mvpoly.lisp
+
+
 
