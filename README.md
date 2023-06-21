@@ -1,1 +1,0 @@
-# Polinomi-Multivariati
