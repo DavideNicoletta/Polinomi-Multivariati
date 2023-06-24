@@ -13,7 +13,7 @@ is_zero(0) :-
 
 
 %%% is_monomial/1
-
+%%% Il predicato is_monomial e' vero se l'oggetto passato e' un monomio.
 is_monomial(m(_C, TD, VPs)) :-
     integer(TD),
     TD >= 0,
@@ -27,6 +27,8 @@ is_monomial(poly(_)) :- false.
 
 
 %%% sum_degrees/2
+%%% Il predicato sum_degrees_variables e' vero se TotalDegree e' la somma
+%%% di tutti gli esponenti delle VP.
 sum_degrees([], 0) :- !.
 sum_degrees([v(Exponent, _Variable) | Vs], TotalDegree) :-
     sum_degrees(Vs, TotalDegree2),
@@ -36,6 +38,7 @@ sum_degrees([v(Exponent, _Variable) | Vs], TotalDegree) :-
 
 
 %%% is_varpower/1
+%%% Il predicato is_varpower e' vero se l'oggetto passato e' un VP.
 is_varpower(v(Power, VarSymbol)) :-
     integer(Power),
     Power >= 0,
@@ -45,18 +48,24 @@ is_varpower(v(Power, VarSymbol)) :-
 
 
 %%% as_monomial/2
-%%% as_monomial(Expression, Monomial)
+%%% Il predicato as_monomial e' vero quando Monomial e' la
+%%% rappresentazione standard del primo predicato ordinato e compattato.
 as_monomial(Expression, Monomial) :-
     monomial_sorted(Expression, StartMonomial),
     reduce_monomial(StartMonomial, Monomial).
 
 
 %%% monomial_sorted/2
+%%% True se il secondo argomento è un monomio analizzato e ordinato 
+%%% a partire da un'Espressione passata come primo argomento
 monomial_sorted(Expression, m(C, TD, VPs)) :-
 		    monomial_start(Expression, m(C, TD, VPs2)),
 		    sort(2, @=<, VPs2, VPs).
 
 %%% monomial_start/2
+%%% True quando Mono e' la
+%%% rappresentazione standard di Expression la quale rappresenta la
+%%% versione tradizionale di un monomio.
 monomial_start(0, m(0, 0, [])) :-
     !.
 monomial_start(_ + _, _) :-
@@ -105,9 +114,12 @@ monomial_start(Coefficent, m(C, 0, [])) :-
 
 
 %%% reduce_monomial/2
+%%% True e' vero quando MonomialReduce rappresenta
+%%% il parametro Monomial in seguito alla compattazione delle variabili.
 reduce_monomial(Monomial, MonomialReduce) :-
     !,
     reduce_monomial_execute(Monomial, MonomialReduce).
+
 
 %%% reduce_monomial_execute/2
 reduce_monomial_execute(m(0, _, _), m(0, 0, [])) :-
@@ -133,8 +145,7 @@ reduce_monomial_execute(m(C, TD, [v(Exponent1, Var), v(Exponent2, DiffVar) | VPs
 
 
 %%% is_polynomial/1
-%%% is_polynomials(poly[Monomials])
-%%% true when Monomials is an list composed of monomails
+%%% Il predicato is_polynomial e' vero se l'argomento e' una lista di monomi.
 is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
     !,
@@ -145,11 +156,16 @@ is_polynomial(Monomial) :-
 
 
 %%% as_polynomial/2
+%%% Il predicato as_polynomial e' vero quando Polynomial rappresenta la
+%%% rappresentazione standard del primo parametro ordinata e con la
+%%% eliminazione dei monomi con il  coefficiente a 0.
 as_polynomial(Expression, Polynomial) :-
     polynomial_sorted(Expression, PolynomialZero),
     remove_zero(PolynomialZero, Polynomial).
 
+
 %%% polynomial_sorted/2
+%%% Analizza e ordina un polinomio, quindi somma i monomi simili in esso contenuti.
 polynomial_sorted(m(0, _, _), poly([])) :-
     !.
 polynomial_sorted(m(C, TD, VPs2), poly([m(C, TD, VPs)])) :-
@@ -163,12 +179,15 @@ polynomial_sorted(Expression, poly(Monomials)) :-
 
 
 %%% sort_polynomials/2
+%%% True quando poly(SortedMonomials) rappresenta poly(Monomials) in seguito all'ordinamento lessicografico e' in base al grado
 sort_polynomials(poly(Monomials), poly(SortedMonomials)) :-
     remove_zero(poly(Monomials), poly(MonomialsZero)),
     predsort(compare_monomials, MonomialsZero, SortedMonomials).
 
 
 %%% remove_zero/2
+%%% True quando il secondo polinomio rappresenta il primo
+%%% polinomio privato di tutti i monomi con coefficiente pari a 0
 remove_zero(poly([]), poly([])) :-
     !.
 
@@ -176,13 +195,6 @@ remove_zero(poly([m(0, _, _) | Tail]), poly(Tail2)) :-
     !,
     remove_zero(poly(Tail), poly(Tail2)).
 
-/**
-remove_zero(poly([Head | Tail]), poly(Tail2)) :-
-    !,
-    is_zero(Head),
-    !,
-    remove_zero(poly(Tail), poly(Tail2)).
-*/
 remove_zero(poly([m(C, TD, VPs) | Tail]), poly([m(C, TD, VPs) | Tail2])) :-
 		!,
 		remove_zero(poly(Tail), poly(Tail2)).
@@ -205,6 +217,8 @@ polynomial_start(Monomial, poly([ParsedMono])) :-
 
 
 %%% sum_monomials/2
+%%% True quando il secondo polinomio rappresenta il 
+%%% il primo polinomio con tutti i monomi simili sommati.
 sum_monomials(poly([]), poly([])) :-
     !.
 sum_monomials(poly([X]), poly([X])) :-
@@ -220,9 +234,8 @@ sum_monomials(poly([A, B | Tail1]), poly([A | Tail2])) :-
 
 
 %%% coefficients/2
-%%% coefficients(Poly, Coefficients)
-%%% true whene Coefficients is a list composed of
-%%% the coefficients of polinomial
+%%% Il predicato coefficients e' vero quando Coefficients e' una lista dei
+%%% coefficienti di Poly.
 
 coefficients(poly([]), [0]) :-
     !.
@@ -237,6 +250,8 @@ is_mono_parse(m(_, _, _)) :-
     !.
 
 %%% red_sort_polynomial/2
+%%% True quando ParsedPolynomial rappresenta il primo parametro 
+%%% in seguito all'ordinamento.
 red_sort_polynomial(Monomial, ParsedPolynomial) :-
     is_monomial(Monomial),
     is_mono_parse(Monomial),
@@ -268,11 +283,15 @@ get_polynomial_coefficients_execute(poly([Head | Rest]), [R | RestCoef]) :-
     
 
 %%% get_coefficient_mono/2
+%%% True quando C è il coefficiente del monomio
 get_coefficient_mono(m(C, _, _), C) :-
     !.
     
 
 %%% compare_monomials/3
+%%% True quando, in base al predicato > o <, il primo monomio risultera' essere maggiore 
+%%% o minore rispetto al secondo monomio
+
 compare_monomials(<, m(_C1, TD, VPs1), m(_C2, TD, VPs2)) :-
     compare_variables(<, VPs1, VPs2),
     !.
@@ -287,6 +306,8 @@ compare_monomials(<, m(_C1, TD1, _VPs1), m(_C2, TD2, _VPs2)) :-
 
 
 %%% compare_variables/3
+%%% Il predicato compare_variables e' vero quando, in base al predicato >
+%%% o <, VPS1 risultera' essere maggiore( o minore) rispetto a VPS2.
 compare_variables(>, [], _) :- !.
 compare_variables(<, _, []) :- !.
 compare_variables(<, v(_, Var1), v(_, Var2)) :-
@@ -322,6 +343,8 @@ compare_variables(>, [v(_, Var1) | _Vs1] , [v(_, Var2) | _Vs2]) :-
 
 
 %%% variables/2
+%%% True quando Variables e' una lista
+%%% dei simboli di variabile che appaiono in Poly.
 variables(poly([]), []) :-
     !.
 variables(Poly, Variables) :-
@@ -332,7 +355,11 @@ variables(Poly, Variables) :-
     !,
     sort(List, Variables).
 
+
 %%% polynomial_variables/2
+%%% True se il secondo argomento si unifica con la lista delle variabili del
+%%% monomi che compongono il polinomio passato come primo argomento, ordinati per
+%%% ordine lessicografico
 polynomial_variables(poly([]), []) :-
     !.
 polynomial_variables(poly(Monomials), Variables) :-
@@ -350,11 +377,15 @@ polynomial_variables_execute(poly([Head | Rest]), [R | VariableList]) :-
 
 
 %%% get_monomial_var/2
+%%% True quando il secondo parametro rappresenta la lista di variabili e potenze che appaiono nel
+%%% monomio passato come primo parametro.
 get_monomial_var(m(_, _, VPs), VPs) :-
     !.
 
 
 %%% get_symbol_var/2
+%%% True se SymbolVar e' il simbolo di variabile della VP in questione.
+
 get_symbol_var([], []) :-
     !.
 get_symbol_var([v(_, SymbolVar) | VPs], [SymbolVar | VPs2]) :-
@@ -363,6 +394,7 @@ get_symbol_var([v(_, SymbolVar) | VPs], [SymbolVar | VPs2]) :-
 
 
 %%% monomials/2
+%%% True quando Monomials e' la lista dei monomi che appaiono in Poly
 monomials(poly([]), []) :-
     !.
 monomials(Poly, Monomials) :-
@@ -372,6 +404,8 @@ monomials(Poly, Monomials) :-
 
 
 %%% pprint_polynomial/1
+%%% True dopo aver stampato una rappresentazione tradizionale del termine
+%%% polinomio associato a Polynomial.
 pprint_polynomial(Poly) :-
     red_sort_polynomial(Poly, PolynomialParsed),
     !,
@@ -420,6 +454,7 @@ print_VarPower([v(Exponent, Variable) | VPs]) :-
 
 
 %%% max_degree/2
+%%% True quando Degree e' il massimo grado dei monomi che appaiono in Poly.
 max_degree(poly([]), 0) :-
     !.
 max_degree(Poly, Degree) :-
@@ -433,6 +468,8 @@ max_degree(Poly, Degree) :-
 
 
 %%% last_monomial/2
+%%% True quando Max e' l'ultimo monomio presente nella lista di Monomi 
+%%% passata come primo parametro.
 last_monomial([], m(0, 0, [])) :-
     !.
 last_monomial([X], X) :-
@@ -442,6 +479,7 @@ last_monomial([_ | Xs], Max) :-
 
 
 %%% min_degree/2
+%%% True quando Degree e' il minimo grado dei monomi che appaiono in Poly.
 min_degree(poly([]), 0) :-
     !.
 min_degree(Poly, Degree) :-
@@ -449,6 +487,7 @@ min_degree(Poly, Degree) :-
     !.
 
 %%% poly_plus/3
+%%% True quando Result e' il polinomio somma di Poly1 e Poly2 ordinato
 poly_plus(Poly1, Poly2, Result) :-
     red_sort_polynomial(Poly1, Parsed1),
     red_sort_polynomial(Poly2, Parsed2),
@@ -472,14 +511,16 @@ poly_plus_minus_execute(poly(FirstMonomial),
     remove_zero(poly(J), poly(Result)).
 									    
 %%% all_monomial_reduce/2
+%%% quando il secondo polinomio rappresenta il primo
+%%% polinomio in seguito alla compatazione delle variabili.
 all_monomial_reduce(poly([]), poly([])) :-
     !.
 all_monomial_reduce(poly([Head | Tail]), poly([HeadR | TailR])) :-
     reduce_monomial(Head, HeadR),
     all_monomial_reduce(poly(Tail), poly(TailR)).
 
-
 %%% poly_minus/3
+%%% True quando Result e' il polinomio differenza di Poly1 e Poly2 ordinato
 poly_minus(Poly1, Poly2, Result) :-
     red_sort_polynomial(Poly1, Parsed1),
     red_sort_polynomial(Poly2, Parsed2),
@@ -487,7 +528,9 @@ poly_minus(Poly1, Poly2, Result) :-
     poly_plus_minus_execute(Parsed1, ReverseParsed2, Result).
 
 
-%%% revers_polynomial/2
+%%% reverse_polynomial/2
+%%% Truequando il secondo polinomio rappresenta il primo polinomio con tutti i 
+%%% coefficienti dei vari monomi cambiati di segno.
 reverse_polynomial(poly([]), poly([])) :-
     !.
 reverse_polynomial(poly([m(C, TD, VPs) | Mono]),
@@ -498,6 +541,9 @@ reverse_polynomial(poly([m(C, TD, VPs) | Mono]),
 
 
 %%% poly_times/3
+%%% True quando Result e' il polinomio risultante, dalla moltiplicazione 
+%%% di Poly1 e Poly2, ordinato, effettua anche la compatazione  delle 
+%%% variabili e la somma dei monomi simili. 
 poly_times(Poly1, Poly2, Result) :-
     red_sort_polynomial(Poly1, Parsed1),
     !,
@@ -505,12 +551,13 @@ poly_times(Poly1, Poly2, Result) :-
     !,
     poly_times_execute(Parsed1, Parsed2, ExecuteResult),
     sort_polynomials(ExecuteResult, Sort),
-    reduce_all(Sort, ReduceResult),
+    all_monomial_reduce(Sort, ReduceResult),
     sum_monomials(ReduceResult, Sum),
     remove_zero(Sum, Result).
 
 
 %%% poly_times_execute/3
+
 poly_times_execute(poly([]), poly([]), poly([])) :-
     !.
 poly_times_execute(poly([]), poly(_), poly([])) :-
@@ -527,9 +574,9 @@ poly_times_execute(poly([Head | Tail]), poly([Head2 | Tail2]),
 
 
 
-%%%  mulTimes/3
-%%% This predicate multiplies the first Monomial by the second one
-
+%%% mulTimes/3
+%%% Truequando il terzo polinomio e' uguale al prodotto 
+%%% tra il primo e il secondo polinomio
 mulTimes(m(0, _, _), m(_, _, _), m(0, 0, [])) :- !.
 mulTimes(m(_, _, _), m(0, _, _), m(0, 0, [])) :- !.
 mulTimes(M, [], M) :- !.
@@ -543,7 +590,7 @@ mulTimes(m(C1, TD1, VPs1), m(C2, TD2, VPs2), m(C, TD, VPs)) :-
 			  
 %%% multiply_variables/3
 %%% This predicate sums the similar variables in a Monomial
-
+%%% True quando VPSRIS rappresenta il risultato del prodotto tra VPS1 e VPS2.
 multiply_variables([], [], []) :- !.
 multiply_variables(V, [], V) :- !.
 multiply_variables([], V, V) :- !.
@@ -563,15 +610,14 @@ multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
     !,
     multiply_variables(Vs1, [v(Exp2, Var2) | Vs2], Vs).			    
 			    
-%%% reduce_all/2
-%%% Reduces all the monomials in a poly
 
-reduce_all(poly([]), poly([])) :- !.
-reduce_all(poly([Head | Tail]),
-                 poly([ReduceHead | ReduceTail])) :-
-    reduce_monomial(Head, ReduceHead),
-    reduce_all(poly(Tail), poly(ReduceTail)).
-
+%%% poly_val/3
+%%% True quanto Value contiene il valore del polinomio Polynomial 
+%%% (che puo' anche essere un monomio), nel punto n-dimensionale rappresentato
+%%% dalla lista VariableValues, che contiene un valore per ogni variabile 
+%%% ottenuta con il predicato variables.
+polyval(Polynomial, VariableValues, Value) :-
+    polyvalCall(Polynomial, VariableValues, Value).
 
 %%%% end of file -- mvpoly.pl
     
