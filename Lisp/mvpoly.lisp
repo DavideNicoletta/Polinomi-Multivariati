@@ -364,11 +364,11 @@
 	    (list (stable-sort new-var-powers 'string< :key 'third)))))
 
 
-;;; compare-var-powers/2
+;;; order-power/2
 ;; Date in input due strutture di tipo VP, restituisce true se la variabile
 ;; di VP1 , in ordine alfabetico, viene prima rispetto a quella di VP2.
 
-(defun compare-var-powers (vars1 vars2)
+(defun order-power (vars1 vars2)
   (cond ((null vars1) (not (null vars2)))
 	((null vars2) nil)
 	(t
@@ -377,15 +377,15 @@
 	    ((string< (third v1) (third v2)) t)
 	    ((string> (third v1) (third v2)) nil)
 	    ((and (equal (third v1) (third v2)) (= (second v1) (second v2)))
-	     (compare-var-powers (rest vars1) (rest vars2)))
+	     (order-power (rest vars1) (rest vars2)))
 	    (t (< (second (first vars1)) (second (first vars2)))))))))
 
 
-;;; compare-degrees/2
+;;; order-degrees/2
 ;; Date in input due strutture di tipo Monomial, restituisce true
 ;; se il TD di Monomial1 è minore del TD di Monomial2
 
-(defun compare-degrees (first-mono rest-monos)
+(defun order-degrees (first-mono rest-monos)
   (when (not (null first-mono))
     (let ((degrees
 	   (list (monomial-degree first-mono)
@@ -393,7 +393,7 @@
       (cond ((null first-mono) (not (null rest-monos)))
             ((null rest-monos) nil)
             ((= (first degrees) (second degrees))
-	     (compare-var-powers (var-powers first-mono)
+	     (order-power (var-powers first-mono)
 				 (var-powers rest-monos)))
             (t (< (first degrees) (second degrees)))))))
 
@@ -405,42 +405,42 @@
 
 (defun sort-poly (monos)
   (let ((poly-copied (copy-list monos)))
-    (stable-sort poly-copied #'compare-degrees)))
+    (stable-sort poly-copied #'order-degrees)))
 
 
-;;; build-coefficient/1
+;;; get-coefficient/1
 ;; Date in input una generica Expression ritorna il Coefficient
 ;; risultante dal parsing di tale Expression.
 
-(defun build-coefficient (expression)
+(defun get-coefficient (expression)
   (if (null expression) 1
     (if (is-number (first expression))
-	(* 1 (eval (first expression)) (build-coefficient (rest expression)))
-      (* 1 (build-coefficient (rest expression))))))
+	(* 1 (eval (first expression)) (get-coefficient (rest expression)))
+      (* 1 (get-coefficient (rest expression))))))
 
 
-;;; build-var-powers/2
+;;; get-var-powers/2
 ;; Date in input una generica Expression ritorna la struttura
 ;; (TD (VPS)) risultante dal parsing di tale Expression.
 
-(defun build-var-powers (expr td)
+(defun get-var-powers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
     (cond ((and (listp head)
 		(not (null head))
 		(not (eq (third head) 0))
 		(equal (first head) 'expt))
-           (append (build-var-powers tail (+ (eval td) (eval (third head))))
+           (append (get-var-powers tail (+ (eval td) (eval (third head))))
 		   (list (list 'v (third head) (second head)))))
           ((and (listp head)
 		(not (null head))
 		(eq (third head) 0)
 		(equal (first head) 'expt))
-           (append (build-var-powers tail (+ (eval td) (eval (third head))))
+           (append (get-var-powers tail (+ (eval td) (eval (third head))))
 		   nil))
           ((and (symbolp head) (not (null head)))
-           (append (build-var-powers tail (+ 1 (eval td)))
+           (append (get-var-powers tail (+ 1 (eval td)))
 		   (list (list 'v 1 head))))
-          ((numberp (eval head)) (build-var-powers tail td))
+          ((numberp (eval head)) (get-var-powers tail td))
           ((null head) (list td)))))
 
 
@@ -458,9 +458,9 @@
                             (parse-power-negative-coeff (second expr))
 			  (list 'm -1 1 (list 'v 1 (second expr)))))
                        ((equal head '*)
-                        (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
-			  (let ((vps (build-var-powers tail 0)))
-			    (append (list 'm) (list (build-coefficient tail))
+                        (if (eql (get-coefficient tail) 0) (list 'm 0 0 nil)
+			  (let ((vps (get-var-powers tail 0)))
+			    (append (list 'm) (list (get-coefficient tail))
 				    (list (first vps)) (list (rest vps))))))
                        ((equal head '+)
                         nil))
@@ -486,11 +486,11 @@
 	    (list (as-monomial head))))))))
 
 
-;;; check-equal-variables/1
+;;; is-equal-variables/1
 ;; Dati in input due Monomi , ritorna TRUE se i due monomi
 ;; hanno le stesse variabili.
 
-(defun check-equal-variables (expr)
+(defun is-equal-variables (expr)
   (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
     (if (equal variables1 variables2) T NIL)))
 
