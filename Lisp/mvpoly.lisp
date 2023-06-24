@@ -4,29 +4,31 @@
 
 
 ;;; as-monomial/1
-;; Parses a monomial
-;; NB: per il concetto di atomo in CL, (as-monomial '-x)
-;; prende -x come simbolo di variabile
+;; La funzione as-monomial ritorna la struttura dati (lista)
+;; che rappresenta il monomio risultante dal
+;; “parsing” dell’espressione Expression
 
 (defun as-monomial (expr)
-  (compress-vars-in-monomial (sort-monomial (as-monomial-start expr))))
+  (reduce-monomial (sort-monomial (as-monomial-start expr))))
 
 
 ;;; as-polynomial/1
-;; Parses the input as a polynomial, sorts and reduces it
+;; La funzione as-polynomial ritorna la struttura dati (lista)
+;; che rappresenta il monomio risultante dal
+;; “parsing” dell’espressione Expression
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (parse-polynomial expr)
     (append (list 'poly)
 	    (list
 	     (remove-zero
-	      (sum-similar-monos-in-poly
+	      (sum-similar-monos
 	       (sort-poly (as-polynomial-execute expr))))))))
 
 
 
 ;;; is-monomial/1
-;; Returns true if m is a monomial
+;; La funzioen ritorna true se m è un monomio
 
 (defun is-monomial (m)
   (and (listp m)
@@ -40,7 +42,7 @@
 
 
 ;;; is-polynomial/1
-;; T if p is a polynomial
+;; La funzioen ritorna true se p è un polinomio
 
 (defun is-polynomial (p)
   (and (listp p)
@@ -51,13 +53,13 @@
 
 
 ;;; is-zero/1
-;; La funzione ritorna T come Result, quando X è una rappresentazione dello 0 (incluso, ovviamente il caso
-;; in cui sia proprio 0).
-(defun is-zero (mono)
+;; La funzione ritorna T come Result, quando X è una rappresentazione
+;; dello 0 (incluso, ovviamente il caso in cui sia proprio 0).
+(defun is-zero (X)
   (cond
-   ((and (numberp mono)(eq mono 0)) T) 
-   ((and (eq (first mono) 'm) (eq (second mono) 0)) T)
-   ((and (eq (first mono) 'poly) (eq (second mono) '())) T)
+   ((and (numberp X)(eq X 0)) T) 
+   ((and (eq (first X) 'm) (eq (second X) 0)) T)
+   ((and (eq (first X) 'poly) (eq (second X) '())) T)
    (t nil)))
 
 
@@ -118,7 +120,7 @@
 
 
 ;;; coefficients/1
-;; La funzione coefficients ritorna una lista Coefficients dei – ovviamente – coefficienti di Poly.
+;; La funzione coefficients ritorna una lista Coefficients dei  coefficienti di Poly.
 
 (defun coefficients (p)
   (let* ((parsed-p (parse-polynomial p)) 
@@ -129,7 +131,8 @@
 
 
 ;;; variables/1
-;; La funzione variables ritorna una lista Variables dei simboli di variabile che appaiono in Poly.
+;; La funzione variables ritorna una lista Variables dei simboli di
+;; variabile che appaiono in Poly.
 
 (defun variables (p)
   (let ((parsed-p (parse-polynomial p)))
@@ -141,7 +144,8 @@
 
 
 ;;; monomials/1
-;; La funzione monomials ritorna la lista dei monomi che appaiono in Poly.
+;; La funzione monomials ritorna la lista
+;; dei monomi che appaiono in Poly.
 
 (defun monomials (p)
   (if (equal (first p) 'poly) 
@@ -151,7 +155,8 @@
 
 
 ;;; max-degree/1
-;; La funzione max-degree ritorna il massimo grado dei monomi che appaiono in Poly.
+;; La funzione max-degree ritorna il massimo grado
+;; dei monomi che appaiono in Poly.
 
 (defun max-degree (p)
   (let* ((parsed-p (parse-polynomial p)))
@@ -159,7 +164,8 @@
 
 
 ;;; min-degree/1
-;; La funzione min-degree ritorna il minimo grado dei monomi che appaiono in Poly
+;; La funzione min-degree ritorna il minimo grado
+;; dei monomi che appaiono in Poly
 
 (defun min-degree (p)
   (let* ((parsed-p (parse-polynomial p)))
@@ -177,7 +183,7 @@
     (append (list 'poly)
             (list (remove-zero
                    (sort-poly
-                    (sum-similar-monos-in-poly
+                    (sum-similar-monos
                      (sort-poly (append (monomials p1)
                                         (monomials p2))))))))))
 
@@ -190,28 +196,30 @@
     (append (list 'poly)
             (list (remove-zero
                    (sort-poly
-                    (sum-similar-monos-in-poly
+                    (sum-similar-monos
                      (sort-poly (append (monomials p1)
                                         (change-sign
                                          (monomials p2)))))))))))
 
 
 ;;; poly-times/2
-;; La funzione poly-times ritorna il polinomio risultante dalla moltiplicazione di Poly1 e Poly2.
+;; La funzione poly-times ritorna il polinomio risultante
+;; dalla moltiplicazione di Poly1 e Poly2.
 
 (defun poly-times (poly1 poly2)
   (append (list 'poly)
           (list (remove-zero
-                 (sort-poly (sum-similar-monos-in-poly
+                 (sort-poly (sum-similar-monos
                              (poly-times-call
                               (monomials (parse-polynomial poly1))
                               (monomials (parse-polynomial poly2)))))))))
 
 
 ;;; poly-val/2
-;; La funzione poly-val restituisce il valore Value del polinomio Polynomial 
-;; (che può anche essere un monomio), nel punto n-dimensionale rappresentato dalla lista VariableValues, che contiene un valore per
-;; ogni variabile ottenuta con la funzione variables.
+;; La funzione poly-val restituisce il valore Value
+;; del polinomio Polynomial (che può anche essere un monomio),
+;; nel punto n-dimensionale rappresentato dalla lista VariableValues,
+;; che contiene un valore per ogni variabile ottenuta con la funzione variables.
 
 (defun poly-val (poly value)
   (if (not (equal 'poly (first poly))) (poly-val (parse-polynomial poly) value)
@@ -228,17 +236,18 @@
 
 
 ;;; pprint-polynomial/1
-;; La funzione pprint-polynomial ritorna NIL dopo aver stampato (sullo “standard output”) una rappresentazione tradizionale del termine polinomio
-;; associato a Polynomial. Si puó omettere il simbolo di moltiplicazione.
+;; La funzione pprint-polynomial ritorna NIL dopo aver stampato
+;; (sullo “standard output”) una rappresentazione tradizionale
+;; del termine polinomio associato a Polynomial.
 
 (defun pprint-polynomial (poly)
   (format t "~a"
 	  (format nil "~a"
-		  (pprint-polynomial-call
+		  (pprint-polynomial-execute
 		   (second (parse-polynomial poly))))))
 
 ;;; varpower-power/1
-;; Returns the exponent from a variable (v Exp VarSymbol)
+;; La funzione ritorna l'espondente di una variabile
 
 (defun varpower-power (vp)
   (let ((pow (second vp)))
@@ -246,7 +255,7 @@
 
 
 ;;; varpower-symbol/1
-;; Returns the varsymbol from a variable (v Exp VarSymbol)
+;; La funzione ritorna il simbolo della variabile
 
 (defun varpower-symbol (vp)
   (let ((vs (third vp)))
@@ -257,7 +266,7 @@
 
 
 ;;; is-varpower/1
-;; T if vp is a list of var-powers
+;; La funzione ritorna true quando vp è una lista di variabili
 
 (defun is-varpower (vp)
   (and (listp vp)
@@ -271,7 +280,7 @@
 
 
 ;;; remove-zero/1
-;; Removes every monomial with coefficient = 0 from a list of monos
+;; La funzione rimuove i monomi che hanno coefficiente zero
 
 (defun remove-zero (monos)
   (if (null monos) nil
@@ -282,14 +291,9 @@
 
 
 
-
-
-
-
-
-
 ;;; is-number/1
-;; If (eval expression) is a number, returns it. Else NIL
+;; Data in input un'espressione, se è un numero ritorna il numero stesso,
+;; se è una funzione composta calcola il risultato.
 
 (defun is-number (expression)
   (let ((result 
@@ -303,7 +307,8 @@
 
 
 ;;; is-power-not-parsed/1
-;; True if expr is an expression to be parsed
+;; Data in input un'espressione, se tale espressione è una lista del tipo
+;; (expt varsymbol number) allora ritorna true.
 
 (defun is-power-not-parsed (expr)
   (if (not (listp expr)) nil
@@ -313,7 +318,10 @@
 
 
 ;;; parse-power/1
-;; Parses an expression (expt VAR EXP) into the form (v EXP VAR)
+;; Data in input un'espressione, se tale espressione è una lista del tipo
+;; (expt varsymbol number) allora tale espressione verrà
+;; ordinata in formato (MONO 1 TD (VP)).
+
 
 (defun parse-power (expr)
   (if (is-power-not-parsed expr)
@@ -326,8 +334,10 @@
 
 
 ;;; parse-power-negative-coeff/1
-;; Parses an expression (expt VAR EXP) into the form (v EXP VAR) and
-;; manages a negative coefficient
+;; Data in input un'espressione, se tale espressione è una lista del tipo
+;; (expt varsymbol number)  allora tale espressione viene
+;; ordinata in formato (MONO -1 TD (VP)).
+
 
 (defun parse-power-negative-coeff (expr)
   (if (is-power-not-parsed expr)
@@ -335,15 +345,16 @@
 
 
 ;;; is-operator/1
-;; True if expr is + or - or * or /
+;;La funzione ritorna true se operator è un operatore algebrico (*, / , + , -).
 
-(defun is-operator (expr)
-  (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+))
-      T NIL))
+(defun is-operator (operator)
+  (if (or (eql operator '*) (eql operator '/) (eql operator '-) (eql operator '+))
+      T nil))
 
 
 ;;; sort-monomial/1
-;; Sorts the variables in a monomial by lexicographical order
+;; Data in inputuna struttura del tipo Monomial, restituisce tale Monomio
+;; ordinato secondo ordine lessicografico
 
 (defun sort-monomial (mono)
   (let ((new-var-powers (copy-list (var-powers mono))))
@@ -352,7 +363,8 @@
 
 
 ;;; compare-var-powers/2
-;; Compares the variables in monomials with the same TD
+;; Date in input due strutture di tipo VP, restituisce true se la variabile
+;; di VP1 , in ordine alfabetico, viene prima rispetto a quella di VP2.
 
 (defun compare-var-powers (vars1 vars2)
   (cond ((null vars1) (not (null vars2)))
@@ -368,7 +380,8 @@
 
 
 ;;; compare-degrees/2
-;; Compares the degrees of the monomials in a poly
+;; Date in input due strutture di tipo Monomial, restituisce true
+;; se il TD di Monomial1 è minore del TD di Monomial2
 
 (defun compare-degrees (first-mono rest-monos)
   (when (not (null first-mono))
@@ -383,7 +396,9 @@
 
 
 ;;; sort-poly/2
-;; Sorts a polynomial by degree and lexicographical order
+;; Date in input una strutture di tipo Monomials, ovvero i monomi
+;; che compongono un Polynomial, restituisce la lista di Monomials
+;; ordinati lessicograficamente.
 
 (defun sort-poly (monos)
   (let ((poly-copied (copy-list monos)))
@@ -391,17 +406,19 @@
 
 
 ;;; build-coefficient/1
-;; Evaluates the coefficient of a monomial
+;; Date in input una generica Expression ritorna il Coefficient
+;; risultante dal parsing di tale Expression.
 
-(defun build-coefficient (expr)
-  (if (null expr) 1
-    (if (is-number (first expr))
-	(* 1 (eval (first expr)) (build-coefficient (rest expr)))
-      (* 1 (build-coefficient (rest expr))))))
+(defun build-coefficient (expression)
+  (if (null expression) 1
+    (if (is-number (first expression))
+	(* 1 (eval (first expression)) (build-coefficient (rest expression)))
+      (* 1 (build-coefficient (rest expression))))))
 
 
 ;;; build-var-powers/2
-;; Builds the VPs of a monomial
+;; Date in input una generica Expression ritorna la struttura
+;; (TD (VPS)) risultante dal parsing di tale Expression.
 
 (defun build-var-powers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
@@ -425,7 +442,8 @@
 
 
 ;;; as-monomial-start/1
-;; Parses the input as an unsorted monomial
+;; Date in input un'espressione , (se possbile) verrà parsata nella struttura
+;; Monomial senza però tener conto di riduzioni possibili e ordinamento.
 
 (defun as-monomial-start (expr)
   (cond ((is-number expr) (list 'm (eval expr) 0 nil))
@@ -449,7 +467,8 @@
 
 
 ;;; as-polynomial-execute/1
-;; Parses the input as a polynomial
+;; Date in input un'espressione , (se possbile) verrà parsata nella struttura
+;; Polynomial senza però tener conto di riduzioni possibili e ordinamento.
 
 (defun as-polynomial-execute (expr)
   (when (not (null expr))
@@ -465,17 +484,19 @@
 
 
 ;;; check-equal-variables/1
-;; This function checks if the variables in the monomial are equal
+;; Dati in input due Monomi , ritorna TRUE se i due monomi
+;; hanno le stesse variabili.
 
 (defun check-equal-variables (expr)
   (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
     (if (equal variables1 variables2) T NIL)))
 
 
-;;; sum-similar-monos-in-poly/1
-;; This function sums the similar monomials in a polynomial
+;;; sum-similar-monos/1
+;; Data in input la lista di Monomial che compongono un Poy,
+;; ritorna la lista dei Monomial ridotti.
 
-(defun sum-similar-monos-in-poly (monos)
+(defun sum-similar-monos (monos)
   (cond ((null monos) nil)
         ((null (second monos)) monos)
         (t
@@ -488,27 +509,29 @@
 		(vps2 (var-powers mono2)))
            (if (not (equal vps1 vps2))
 	       (append (list mono1)
-		       (sum-similar-monos-in-poly (rest monos)))
-	     (sum-similar-monos-in-poly
+		       (sum-similar-monos (rest monos)))
+	     (sum-similar-monos
 	      (append (list (list 'm (+ c1 c2) td vps1))
 		      (rest (rest monos)))))))))
 
 
-;;; compress-vars-in-monomial/1
-;; This function sums the exponents of similiar VPs in a monomial
+;;; reduce-monomial/1
+;; Data in input una struttura di tipo Monomial (già ordinata),
+;; ritorna il Monomial ridotto.
 
-(defun compress-vars-in-monomial (mono)
+(defun reduce-monomial (mono)
   (if (null (var-powers mono)) mono
     (let ((vps (var-powers mono))
 	  (c (monomial-coefficient mono))
 	  (td (monomial-degree mono)))
-      (append (list 'm c td) (list (compress-vps vps))))))
+      (append (list 'm c td) (list (reduce-vps vps))))))
 
 
-;;; compress-vps/1
-;; This function sums the exponents of similiar VPs
+;;; reduce-vps/1
+;; Data in input una struttura di tipo VPS , ovvero una lista
+;; di VP (già ordinata), ritorna la VPS ridotta.
 
-(defun compress-vps (vps)
+(defun reduce-vps (vps)
   (if (null vps) nil
     (if (null (second vps)) vps
       (let* ((vp1 (first vps))
@@ -521,13 +544,13 @@
 	(if (not (null tail))
 	    (if (not (null vp2))
 		(if (equal var1 var2)
-		    (compress-vps (append
+		    (reduce-vps (append
 				   (list (list 'v (+ (eval expt1)
 						     (eval expt2))
 					       var1))
 				   tail))
 		  (append (list (list 'v expt1 var1))
-			  (compress-vps (rest vps)))))
+			  (reduce-vps (rest vps)))))
 	  (if (equal var1 var2) (list (list 'v (+ (eval expt1)
 						  (eval expt2))
 					    var1))
@@ -536,7 +559,8 @@
 
 
 ;;; new-pairlis/2
-;; This function creates a list with elements from list1 and list2 alternated
+;; Date in input due liste List1 e List2 , ritorna una lista
+;; alternata di elementi di List1 e List2.
 
 (defun new-pairlis (list1 list2)
   (if (null list1) nil
@@ -546,7 +570,8 @@
 
 
 ;;; change-sign/1
-;; This function changes the sign of the coefficients
+;; Data in input la lista di Monomial che compongono un Polynomial,
+;; ritorna la lista dei Monomi con il Coefficiente invertito di segno.
 
 (defun change-sign (monos)
   (if (null monos) nil
@@ -560,7 +585,8 @@
 
 
 ;;; parse-polynomial/1
-;; Checks whether the input is a Poly. If not, the function parses the input
+;; Data in input un'espressione, se è già un Polynomial lo ritorna inalterato,
+;; se è un Monomial costruirà la struttura Polynomial(Monomial)
 
 (defun parse-polynomial (poly)
   (cond ((is-polynomial poly)
@@ -576,8 +602,10 @@
 
 
 ;;; substitute-var-in-vp/2
-;; This function substitutes variable in a vp with a number
-;; (evaluation point of the poly)
+;; Data in input una struttura di tipo VP e una lista Alternate contenente
+;; liste di coppie (VARIABILE VALORE), sostituisce la VARIABILE di VP
+;; con il VALORE presente nella coppia Alternate ogni qualvolta la VARIABILE
+;; di Alternate è uguale alla VARIABILE di VP
 
 (defun substitute-var-in-vp (vp alternate)
   (if (null alternate) nil
@@ -594,7 +622,11 @@
 
 
 ;;; substitute-vars-in-vps/2
-;; This predicate calls the method that performs variable substitution
+;; Data in input una struttura di tipo VPS , ovvero una lista di VP , 
+;; e una lista Alternate contenente liste di coppie (VARIABILE VALORE),
+;; scorre tutte le VP  della VPS e sostituisce la VARIABILE di VP con
+;; il VALORE presente nella coppia Alternate ogni qualvolta la VARIABILE
+;; di Alternate è uguale alla VARIABILE di VP.
 
 (defun substitute-vars-in-vps (vps alternate)
   (let* ((head (first vps)) (tail (rest vps)))
@@ -605,8 +637,11 @@
 
 
 ;;; substitute-vars-in-mono/2
-;; This function creates a new monomial by substituing the variables with
-;; the corresponding values appearing in the list "alternate"
+;; Data in input una struttura di tipo Monomial e una lista Alternate
+;; contenente liste  di coppie (VARIABILE VALORE), scorre tutte le VP
+;; contenute nella VPS del Monomial  e sostituisce la VARIABILE di VP
+;; con il VALORE presente nella coppia Alternate, ogni qualvolta la
+;; VARIABILE di Alternate è uguale alla VARIABILE di VP.
 
 (defun substitute-vars-in-mono (monos alternate)
   (let* ((head (first monos))
@@ -621,9 +656,11 @@
       (list (list 'm coef td vps-a)))))
 
 
-;;; evaluate-monos/1, evaluate-vps/1
-;; They caluculate the value of the monomials that compose a polynomial
-;; in a certain point
+;;; evaluate-monos/1
+;; Data in input una struttura di tipo Monomials, ovvero la
+;; lista di Monomial che compongono  un Polynomial, con valori
+;; delle variabili già sostituiti mediante l'utilizzo di
+;; SUBSTITUTE-VARS-IN-MONO, ritorna il valore della valutazione dei Monomials.
 
 (defun evaluate-monos (monos)
   (let* ((head (first monos))
@@ -634,6 +671,13 @@
     (if (not (null tail))
 	(+ (* coef vps-a) (evaluate-monos tail))
       (* coef vps-a))))
+
+
+;;;evaluate-vps/1
+;; Data in input una struttura di tipo VPS, ovvero la lista di
+;; VP che compongono un Monomial, con valori delle variabili già
+;; sostituiti mediante l'utilizzo di SUBSTITUTE-VARS-IN-VP, ritorna
+;; il valore della valutazione delle VP di VPS.
 
 (defun evaluate-vps (vps)
   (let* ((head (first vps))
@@ -648,7 +692,10 @@
 
 
 ;;; poly-times-call/2
-;; This function multiplies two polynomials
+;; Dati in input Monomials1 e Monomials2 , ovvero le liste di Monomial
+;; che compongono rispettivamente i due polinomi Polynomial1 e Polynomial2
+;; da moltiplicare, ritorna la lista di Monomial (non ridotta e non ordinata)
+;; risultante dal prodotto di Monomials1 e Monomials2.
 
 (defun poly-times-call (monos1 monos2)
   (if (or (null monos1) (null monos2)) nil
@@ -662,7 +709,9 @@
 
 
 ;;; mono-times/2
-;; This function multiplies two monomials
+;; Dati in input Monomial1 e Monomial2 , due strutture di tipo Monomial,
+;; ritorna il Monomial risultante dalla moltiplicazione di
+;; Monomial1 e Monomial2.
 
 (defun mono-times (mono1 mono2)
   (cond ((null mono1) mono2)
@@ -681,7 +730,8 @@
 
 
 ;;; multiply-variables/2
-;; This function multiplies two VPs
+;; Dati in input VPS1 e VPS2 (ordinate), due strutture di tipo lista di VP,
+;; ritorna la VPS risultante dalla  moltiplicazione di VPS1 e VPS2.
 
 (defun multiply-variables (vps1 vps2)
   (cond ((null vps1) vps2)
@@ -704,37 +754,40 @@
 
 
 
-;;; pprint-polynomial-call/1
-;; This function prints a traditional form of poly
+;;; pprint-polynomial-execute/1
+;; Dato in input una struttura Monomials, ovvero la lista di Monomial che
+;; compongono un Polynomials,  stampa sullo STDOUTPUT Monomials.
 
-(defun pprint-polynomial-call (mono)
+(defun pprint-polynomial-execute (mono)
   (let ((m1 (first mono)) (c2 (second (second mono))))
     (if (not (null c2))
         (if (> c2 0)
-            (append (pprint-polynomial-call-coefficients m1)
+            (append (pprint-polynomial-execute-coefficients m1)
 		    (list '+)
-		    (pprint-polynomial-call (rest mono)))
-	  (append (pprint-polynomial-call-coefficients m1)
-		  (pprint-polynomial-call (rest mono))))
-      (append (pprint-polynomial-call-coefficients m1)))))
+		    (pprint-polynomial-execute (rest mono)))
+	  (append (pprint-polynomial-execute-coefficients m1)
+		  (pprint-polynomial-execute (rest mono))))
+      (append (pprint-polynomial-execute-coefficients m1)))))
 
 
-;;; pprint-polynomial-call-coefficients/1
-;; This function prints the coefficient of a mono
+;;; pprint-polynomial-execute-coefficients/1
+;; Dato in input una struttura Monomial  stampa sullo STDOUTPUT i coefficienti
+;; e le  variabili del Monomial dato in input.
 
-(defun pprint-polynomial-call-coefficients (m1)
+(defun pprint-polynomial-execute-coefficients (m1)
   (let ((c1 (second m1)) (v&p (fourth m1)))
     (if (equal v&p nil)
         (append (list c1))
       (append (list c1)
 	      (list '*)
-	      (pprint-polynomial-call-variables v&p)))))
+	      (pprint-polynomial-execute-variables v&p)))))
 
 
-;;; pprint-polynomial-call-variables/1
-;; This function prints variables and powers of a mono
+;;; pprint-polynomial-execute-variables/1
+;; Dato in input una struttural VPS stampa sullo STDOUTPUT le variabili del
+;; Monomial dato in input.
 
-(defun pprint-polynomial-call-variables (var-power)
+(defun pprint-polynomial-execute-variables (var-power)
   (if (null var-power) nil
     (let ((exp (second (first var-power))) (var (third (first var-power))))
       (if (equal (rest var-power) nil)
@@ -742,9 +795,9 @@
 	      (append (list var)) (append (list var '^ exp)))
 	(if (= exp 1)
 	    (append (list var '*)
-		    (pprint-polynomial-call-variables (rest var-power)))
+		    (pprint-polynomial-execute-variables (rest var-power)))
 	  (append (list var '^ exp '*)
-		  (pprint-polynomial-call-variables
+		  (pprint-polynomial-execute-variables
 		   (rest var-power))))))))
 
 
