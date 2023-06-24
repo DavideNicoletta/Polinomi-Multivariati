@@ -130,15 +130,17 @@ reduce_monomial_execute(m(C, TD, [v(Exponent, Variable)]),
 			m(C, TD, [v(Exponent, Variable)])) :-
     !.
 reduce_monomial_execute(m(C, TD,
-			 [v(Exponent1, Variable), v(Exponent2, Variable) | VPs]),
-			 m(C, TD, VPsReduced)) :-
+			  [v(Exponent1, Variable),
+			   v(Exponent2, Variable) | VPs]),
+			m(C, TD, VPsReduced)) :-
 			    !,
 			    X is Exponent1 + Exponent2,
 			    !,
 			    reduce_monomial(m(C, TD, [v(X, Variable) | VPs]),
 					    m(C, TD, VPsReduced)).
-reduce_monomial_execute(m(C, TD, [v(Exponent1, Var), v(Exponent2, DiffVar) | VPs]),
-		     m(C, TD, [v(Exponent1, Var) | VPsReduced])) :-
+reduce_monomial_execute(m(C, TD, [v(Exponent1, Var),
+				  v(Exponent2, DiffVar) | VPs]),
+			m(C, TD, [v(Exponent1, Var) | VPsReduced])) :-
     !,
     reduce_monomial(m(C, TD, [v(Exponent2, DiffVar) | VPs]),
 		    m(C, TD, VPsReduced)).
@@ -165,7 +167,8 @@ as_polynomial(Expression, Polynomial) :-
 
 
 %%% polynomial_sorted/2
-%%% Analizza e ordina un polinomio, quindi somma i monomi simili in esso contenuti.
+%%% Analizza e ordina un polinomio, quindi somma
+%%% i monomi simili in esso contenuti.
 polynomial_sorted(m(0, _, _), poly([])) :-
     !.
 polynomial_sorted(m(C, TD, VPs2), poly([m(C, TD, VPs)])) :-
@@ -179,7 +182,8 @@ polynomial_sorted(Expression, poly(Monomials)) :-
 
 
 %%% sort_polynomials/2
-%%% True quando poly(SortedMonomials) rappresenta poly(Monomials) in seguito all'ordinamento lessicografico e' in base al grado
+%%% True quando poly(SortedMonomials) rappresenta poly(Monomials) in
+%%% seguito all'ordinamento lessicografico e' in base al grado
 sort_polynomials(poly(Monomials), poly(SortedMonomials)) :-
     remove_zero(poly(Monomials), poly(MonomialsZero)),
     predsort(compare_monomials, MonomialsZero, SortedMonomials).
@@ -289,8 +293,8 @@ get_coefficient_mono(m(C, _, _), C) :-
     
 
 %%% compare_monomials/3
-%%% True quando, in base al predicato > o <, il primo monomio risultera' essere maggiore 
-%%% o minore rispetto al secondo monomio
+%%% True quando, in base al predicato > o <, il primo monomio  
+%%% risulterà essere maggiore o minore rispetto al secondo monomio
 
 compare_monomials(<, m(_C1, TD, VPs1), m(_C2, TD, VPs2)) :-
     compare_variables(<, VPs1, VPs2),
@@ -358,8 +362,8 @@ variables(Poly, Variables) :-
 
 %%% polynomial_variables/2
 %%% True se il secondo argomento si unifica con la lista delle variabili del
-%%% monomi che compongono il polinomio passato come primo argomento, ordinati per
-%%% ordine lessicografico
+%%% monomi che compongono il polinomio passato come primo argomento, 
+%%% ordinati per ordine lessicografico
 polynomial_variables(poly([]), []) :-
     !.
 polynomial_variables(poly(Monomials), Variables) :-
@@ -377,8 +381,8 @@ polynomial_variables_execute(poly([Head | Rest]), [R | VariableList]) :-
 
 
 %%% get_monomial_var/2
-%%% True quando il secondo parametro rappresenta la lista di variabili e potenze che appaiono nel
-%%% monomio passato come primo parametro.
+%%% True quando il secondo parametro rappresenta la lista di variabili
+%%% e potenze che appaiono nel monomio passato come primo parametro.
 get_monomial_var(m(_, _, VPs), VPs) :-
     !.
 

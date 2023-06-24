@@ -120,7 +120,8 @@
 
 
 ;;; coefficients/1
-;; La funzione coefficients ritorna una lista Coefficients dei  coefficienti di Poly.
+;; La funzione coefficients ritorna una lista Coefficients
+;; dei  coefficienti di Poly.
 
 (defun coefficients (p)
   (let* ((parsed-p (parse-polynomial p)) 
@@ -348,7 +349,8 @@
 ;;La funzione ritorna true se operator è un operatore algebrico (*, / , + , -).
 
 (defun is-operator (operator)
-  (if (or (eql operator '*) (eql operator '/) (eql operator '-) (eql operator '+))
+  (if (or (eql operator '*) (eql operator '/)
+	  (eql operator '-) (eql operator '+))
       T nil))
 
 
@@ -391,7 +393,8 @@
       (cond ((null first-mono) (not (null rest-monos)))
             ((null rest-monos) nil)
             ((= (first degrees) (second degrees))
-	     (compare-var-powers (var-powers first-mono) (var-powers rest-monos)))
+	     (compare-var-powers (var-powers first-mono)
+				 (var-powers rest-monos)))
             (t (< (first degrees) (second degrees)))))))
 
 
