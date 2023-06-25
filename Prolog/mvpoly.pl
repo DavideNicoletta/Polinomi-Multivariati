@@ -294,7 +294,7 @@ get_coefficient_mono(m(C, _, _), C) :-
 
 %%% compare_monomials/3
 %%% True quando, in base al predicato > o <, il primo monomio  
-%%% risulterà essere maggiore o minore rispetto al secondo monomio
+%%% risulterï¿½ essere maggiore o minore rispetto al secondo monomio
 
 compare_monomials(<, m(_C1, TD, VPs1), m(_C2, TD, VPs2)) :-
     compare_variables(<, VPs1, VPs2),
@@ -620,8 +620,81 @@ multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
 %%% (che puo' anche essere un monomio), nel punto n-dimensionale rappresentato
 %%% dalla lista VariableValues, che contiene un valore per ogni variabile 
 %%% ottenuta con il predicato variables.
-polyval(Polynomial, VariableValues, Value) :-
-    polyvalCall(Polynomial, VariableValues, Value).
+poly_val(Polynomial, VariableValues, Value) :-
+    poly_val_execute(Polynomial, VariableValues, Value).
+
+
+%%% poly_val_execute/3
+
+poly_val_execute(Polynomial, VariableValues, Value) :-
+    red_sort_polynomial(Polynomial, poly(Monomials2)), !,
+    is_list(VariableValues), !,
+    sort_polynomials(poly(Monomials2), poly(Monomials)),
+    variables(poly(Monomials), VSs),
+    length(VariableValues, L1),
+    length(VSs, L2),
+    L1 >= L2,
+    pairlis(VSs, VariableValues, Alternated),
+    evaluate_polynomial(poly(Monomials), Alternated, Value).
+
+
+%%% pairlis/3
+%%% Unisce alternativamente la prima e la seconda lista nella terza
+pairlis([], [], []) :- !.
+pairlis([], M, M) :- !.
+pairlis([X | Xs], [Y | Ys], [X, Y | Zs]) :-
+    pairlis(Xs, Ys, Zs).
+
+
+%%% evaluate_polynomial/3
+%%% Valuta un polinomio sommando i valori dei singoli monomi
+evaluate_polynomial(poly([]), _, 0) :- !.
+evaluate_polynomial(poly([m(C, TD, VPs) | OtherMonos]), Alternated, Value) :-
+    evaluate_monomial(m(C, TD, VPs), Alternated, ValueMono),
+    evaluate_polynomial(poly(OtherMonos), Alternated, ValueRestPoly),
+    Value is ValueMono + ValueRestPoly.
+
+
+%%% evaluate_monomial/2
+evaluate_var([], 1) :- !.
+evaluate_var([v(Exp, Base) | RestVs], ValueOfTheVars) :-
+    Value is Base ** Exp,
+    evaluate_var(RestVs, ValueRest),
+    ValueOfTheVars is ValueRest * Value.
+
+
+%%% evaluate_var/2
+evaluate_monomial(m(C, TD, VPs), Alternated, Value) :-
+    substitute_monomial(m(C, TD, VPs), Alternated, m(C, TD, VPSubstituted)),
+    evaluate_var(VPSubstituted, ValueOfTheVars),
+    Value is C * ValueOfTheVars.
+
+
+%%% substitute_monomial/3
+%%% Questo predicato crea un nuovo monomio 
+%%% sostituendo i VarSymbols con i valori corrispondenti
+substitute_monomial(m(C, TD, VPs), Alternated, m(C, TD, ListOfVarsOk)) :-
+    get_monomial_var(m(C, TD, VPs), ListOfVars),
+    substitute_var(ListOfVars, Alternated, ListOfVarsOk).
+
+
+%%% substitute_var/3
+%%% Le variabili del polinomio vengono sostituite 
+%%% dai loro valori effettivi
+
+substitute_var([], _, []) :- !.
+substitute_var([v(Exp, Var)], [Var, NewValue], [v(Exp, NewValue)]) :- !.
+substitute_var([v(Exp, Var)], [DifferentVar, _NewValue | Rest], Others) :-
+    Var \= DifferentVar, !,
+    substitute_var([v(Exp, Var)], Rest, Others).
+substitute_var([v(Exp, Var) | Vs], [Var, NewValue | Rest],
+		[v(Exp, NewValue) | Others]) :-
+    !,
+    substitute_var(Vs, Rest, Others).
+substitute_var([v(Exp, Var) | Vs], [Var2, _NewValue | Rest], Others) :-
+    Var \= Var2, !,
+    substitute_var([v(Exp, Var) | Vs], Rest, Others).
+
 
 %%%% end of file -- mvpoly.pl
     

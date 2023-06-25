@@ -1,3 +1,45 @@
+LIBRERIA PER PROLOG
+
+Questa libreria implementa diverse operazioni standard per la
+manipolazione di polinomi come ad esempio:
+- estrazione dei coefficienti 
+- calcolo del grado del polinomio
+- valutazione in un punto
+- somma 
+- moltiplicazione
+
+Rappresentazione di un MONOMIO (RAPPRESENTAZIONE STANDARD):
+I MONOMI saranno rappresentati nel seguente modo
+
+m(Coefficient, TotalDegree, VarsPowers).
+
+ESEMPIO
+m(1, 0, [])
+m(3, 1, [v(1, w)])
+m(1, 7, [v(3, s), v(3, t), v(1, y)])
+
+
+Rappresentazione di una VARIABILE (RAPPRESENTAZIONE STANDARD):
+Le VARIABILI saranno rappresentate nel seguente modo
+v(Exp, Symbol)
+
+ESEMPIO
+v(1, x)
+
+
+Rappresentazione di un POLINOMIO (RAPPRESENTAZIONE STANDARD):
+I POLiNOMI saranno rappresentati nel seguente modo
+
+poly(Monomials) [Un poly e' una lista di monomi]
+
+ESEMPIO
+P = poly([m(-4, 0, []), m(1, 2, [v(1, x), v(1, y)]), m(1, 7, [v(3, s), v(3, t), v(1, y)])])
+
+
+
+
+
+
 Predicati implementati:
 
 is_monomial:
@@ -59,10 +101,9 @@ variables:
 Il predicato variables è vero quando Variables è una lista
 dei simboli di variabile che appaiono in Poly.
 
-variables(x * y * z, V1).
-V1 = [x, y, z].
-variables(poly([m(-3, 0, []), m(-4, 1, [v(1, x)])]), V2).
-V2 = [x].
+variables(x * y * z, V).
+V = [x, y, z].
+
 
 
 
@@ -71,75 +112,63 @@ monomials:
 Il predicato monomials è vero quando Monomials è la
 lista dei monomi che appaiono in Poly.
 
-monomials(x + x + x + x, M1).
-M1 = [m(4, 1, [v(1, x)])].
-monomials(-pippo^123 * pluto, M2).
-M2 = [m(-1, 124, [v(123, pippo), v(1, pluto)])].
+monomials(x + x + x + x, M).
+M = [m(4, 1, [v(1, x)])].
 
 
 
 max_degree:
 
-Il predicato maxdegree è vero quando Degree è il massimo
+Il predicato max_degree è vero quando Degree è il massimo
 grado dei monomi che appaiono in Poly.
 
-maxdegree(-a -b ^ 7 -c^2, MAX1).
-MAX1 = 7.
-maxdegree(a ^ 3 -b + ciao^2, MAX2).
-MAX2 = 3.
+max_degree(-a -b ^ 7 -c^2, MAX).
+MAX = 7.
 
 
 
 min_degree:
 
-Il predicato mindegree è vero quando Degree è il minimo
+Il predicato min_degree è vero quando Degree è il minimo
 grado dei monomi che appaiono in Poly.
 
-mindegree(-a -b ^ 7 -c^2, MIN1).
-MIN1 = 1.
-mindegree(-b ^ 0 -b ^ 7 -b^2, MIN2).
-MIN2 = 0.
+min_degree(-a -b ^ 7 -c^2, MIN).
+MIN = 1.
 
 
 
 poly_plus:
 
-Il predicato polyplus è vero quando Result è il polinomio somma di
+Il predicato poly_plus è vero quando Result è il polinomio somma di
 Poly1 e Poly2 ordinato, polyplus richiama il predicato polyplus_call/3
 la quale effettua la somma vera e propria.
 
-polyplus(a ^ 3, 3 * b, PP1).
-PP1 = poly([m(3, 1, [v(1, b)]), m(1, 3, [v(3, a)])]).
-polyplus(poly([m(1, 2, [v(1, a), v(1, b)])]), m(1, 2, [v(1, a), v(1, b)]), PP2).
-PP2 = poly([m(2, 2, [v(1, a), v(1, b)])]).
+poly_plus(a ^ 3, 3 * b, PP).
+PP = poly([m(3, 1, [v(1, b)]), m(1, 3, [v(3, a)])]).
 
 
 
 poly_minus:
 
-Il predicato polyminus è vero quando Result è il polinomio
+Il predicato poly_minus è vero quando Result è il polinomio
 differenza di Poly1 e Poly2 ordinato, polyminus richiama il predicato
 polyminus_call/3 la quale effettua la differenza vera e propria.
 
-polyminus(a^ 3, 3 * b, PM1).
-PM1 = poly([m(-3, 1, [v(1, b)]), m(1, 3, [v(3, a)])]).
-polyminus(m(-1, 1, [v(1, x)]), 3 * x, PM2).
-PM2 = poly([m(-4, 1, [v(1, x)])]).
+poly_minus(a^ 3, 3 * b, PM).
+PM = poly([m(-3, 1, [v(1, b)]), m(1, 3, [v(3, a)])]).
 
 
 
 poly_times:
 
-Il predicato polytimes è vero quando Result è il polinomio
+Il predicato poly_times è vero quando Result è il polinomio
 risultante, dalla moltiplicazione di Poly1 e Poly2, ordinato, effettua anche la
 compatazione  delle variabili e la somma dei monomi simili. Il
 predicato polytimes richiama il predicato polytimes_call il quale
 effettua il prodotto vero e proprio senza effettuare riduzioni.
 
-polytimes(1, a * b * c, PT1).
-PT1 = poly([m(1, 3, [v(1, a), v(1, b), v(1, c)])]).
-polytimes(x + y, a + b, PT2).
-PT2 = poly([m(1, 2, [v(1, a), v(1, x)]), m(1, 2, [v(1, a), v(1, y)]), m(1, 2, [v(1, b), v(1, x)]), m(1, 2, [v(1, b), v(1, y)])]).
+poly_times(1, a * b * c, PT).
+PT = poly([m(1, 3, [v(1, a), v(1, b), v(1, c)])]).
 
 
 
@@ -150,22 +179,19 @@ rappresenta il monomio risultante dal parsing" dell'espressione Expression.
 Data la generale confusione sul fatto che questo predicato debba accettare
 come primo parametro una forma del tipo (x + x + x), nel nostro caso 
 
-as_monomial(pippo * pippo * pippo * pippo * pippo^5, AM1).
-AM1 = m(1, 9, [v(9, pippo)]).
-as_monomial(0 * a * b * c * quellochevoglio, AM2).
-AM2 = m(0, 0, []).
+as_monomial(x * x * x * x * x^5, AM).
+AM = m(1, 9, [v(9, x)]).
+
 
 
 
 as_polynomia:
 
-Il predicato as polynomial è vero quando Polynomial è il termine che
+Il predicato as_polynomial è vero quando Polynomial è il termine che
 rappresenta il polinomio risultante dal parsing dell'espressione Expression.
 
-as_polynomial(pippo + gennaro + 3 * pippo, AP1).
-AP1 = poly([m(1, 1, [v(1, gennaro)]), m(4, 1, [v(1, pippo)])]).
-as_polynomial(-3 * a ^ 4 +12 * a ^2 * a ^2, AP2).
-AP2 = poly([m(9, 4, [v(4, a)])]).
+as_polynomial(x + y + 3 * x, AP).
+AP = poly([m(4, 1, [v(1, x)]), m(1, 1, [v(1, y)])]).
 
 
 
@@ -176,7 +202,7 @@ polinomio Polynomial (che puo' anche essere un monomio), nel punto
 n-dimensionale rappresentato dalla lista VariableValues, che contiene
 un valore per ogni variabile ottenuta con il predicato variables.
 
-poly_val(x * pippo, [0, 100000], PV1).
+poly_val(x * y, [0, 1], PV1).
 PV1 = 0.
 poly_val(poly([m(3, 1, [v(1, x)]), m(1, 2, [v(2, a)])]), [-1, -2], PV2).
 PV2 = -5.

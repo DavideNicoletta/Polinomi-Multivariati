@@ -1,3 +1,45 @@
+LIBRERIA PER LISP
+
+Questa libreria implementa diverse operazioni standard per la manipolazione di polinomi come ad esempio:
+- estrazione dei coefficienti 
+- calcolo del grado del polinomio
+- valutazione in un punto
+- somma 
+- moltiplicazione
+
+
+Rappresentazione di una VARPOWER
+Le VARPOWER saranno rappresentante nel seguente modo
+
+(V Exponent VariableSymbol)
+
+ESEMPIO:
+(V 1 X)
+
+
+Rappresentazione di un MONOMIO (Monomial):
+I MONOMI saranno rappresentati nel seguente modo
+
+(M Coefficient, TotalDegree, VarsPowers)
+
+ESEMPIO:
+(M 1 0 NIL)
+(M 1 1 ((V 1 S)))
+(M 1 7 ((V 3 S) (V 3 T) (V 1 Y)))
+
+
+Rappresentazione di un POLINOMIO (Polynomial):
+I POLINOMI saranno rappresentati nel seguente modo
+
+(POLY (Monomials) [Un poly è una lista di monomi]
+
+ESEMPIO:
+(POLY ((M 1 1 ((V 1 X))) (M 1 2 ((V 2 X))) (M 1 3 ((V 3 X)))))
+
+
+
+Funzioni Implementate
+
 function IS-MONOMIAL:
 
 is-monomial (Espressione -> Boolean)
@@ -215,5 +257,5 @@ pprint-polynomial-call (Monomials -> NIL)
 La funzione pprint-polynomial ritorna NIL dopo aver stampato (sullo “standard output”) una rappresentazione tradizionale del termine polinomio
 associato a Polynomial. Si puó omettere il simbolo di moltiplicazione.
 
-CL-USER> (pprint-polynomial-call '((M 1 1 ((V 1 A))) (M 1 2 ((V 2 X)))))
-(1 * A + 1 * X ^ 2)
+CL-USER> (pprint-polynomial '((M 1 1 ((V 1 A))) (M 1 2 ((V 2 X)))))
+(2 * M)
