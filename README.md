@@ -1,5 +1,6 @@
 # Polinomi Multivariati
 
+
 ## 1 - Introduzione
 Una delle prime e più importanti applicazioni dei calcolatori fu la manipolazione simbolica di operazioni
 matematiche. In particolare, i sistemi noti come Computer Algebra Systems forniscono funzionalità per la manipolazione di polinomi multivariati.
